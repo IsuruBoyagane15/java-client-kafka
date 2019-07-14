@@ -16,20 +16,19 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-public class Client {
+public class Client{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
     private String kafkaServer = "localhost:9092";
-    private String serealizer = "org.apache.kafka.common.serialization.StringSerializer";
-    private String deserealizer = "org.apache.kafka.common.serialization.StringDeserializer";
 
 
-    public void ProdocuMessages(String message){
+    public void ProduceMessages(String message){
         Properties props=new Properties();
         props.put("bootstrap.servers", this.kafkaServer);
-        props.put("key.serializer", this.serealizer );
-        props.put("value.serializer", this.serealizer);
+        String serializer = "org.apache.kafka.common.serialization.StringSerializer";
+        props.put("key.serializer", serializer);
+        props.put("value.serializer", serializer);
 
         KafkaProducer<String,String> sampleProducer= new KafkaProducer<String,String>(props);
 
@@ -43,15 +42,16 @@ public class Client {
         props.put("group.id", "topic1");
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
-        props.put("key.deserializer", this.deserealizer);
-        props.put("value.deserializer", this.deserealizer);
+        String deserializer = "org.apache.kafka.common.serialization.StringDeserializer";
+        props.put("key.deserializer", deserializer);
+        props.put("value.deserializer", deserializer);
 
         KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
 
         ScriptEngine nashormEngine;
         nashormEngine = new ScriptEngineManager().getEngineByName("nashorn");
         nashormEngine.eval(new FileReader("src/main/java/script.js"));
-        Invocable invocableNashormEngine = (Invocable) nashormEngine;
+//        Invocable invocableNashormEngine = (Invocable) nashormEngine;
 
         consumer.subscribe(Arrays.asList("topic1"));
 
@@ -59,11 +59,11 @@ public class Client {
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(100);
                 for (ConsumerRecord<String, String> record : records) {
-                    System.out.println("key :" + record.key());
-                    System.out.println("value :" + record.value());
-                    System.out.println("topic :" + record.topic());
-                    System.out.println("partition :" + record.partition());
-                    System.out.println(invocableNashormEngine.invokeFunction("func1"));
+//                    System.out.println("key :" + record.key());
+                    System.out.println(nashormEngine.eval(record.value()));
+//                    System.out.println("topic :" + record.topic());
+//                    System.out.println("partition :" + record.partition());
+//                    System.out.println(invocableNashormEngine.invokeFunction("func1"));
                 }
             }
 
@@ -75,10 +75,15 @@ public class Client {
 
     }
 
+
     public static void main(String args[]) throws FileNotFoundException, ScriptException {
-        Client sampleClient = new Client();
-        sampleClient.ProdocuMessages("var int_array = Java.type(\"int[]\");var a = new int_array(4);a[0] = 3;a[1] = 32;a[2] = 1;a[3] = 4;var total = 0;for (i = 0; i<a.length; i++){total += a[i]}return total;");
-        sampleClient.consumeMessage();
+        Client sampleClient1 = new Client();
+        Client sampleClient2 = new Client();
+
+        sampleClient1.ProduceMessages("var a = 1; var b = 0; a+b;");
+        sampleClient2.ProduceMessages("var b = 3; a+b;");
+//        sampleClient2.consumeMessage();
+        sampleClient1.consumeMessage();
     }
 }
 
