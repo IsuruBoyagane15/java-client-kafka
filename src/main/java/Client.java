@@ -16,14 +16,14 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-public class Client{
+public class Client implements Runnable{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
     private String kafkaServer = "localhost:9092";
 
 
-    public void ProduceMessages(String message){
+    public void ProduceMessages(String message) {
         Properties props=new Properties();
         props.put("bootstrap.servers", this.kafkaServer);
         String serializer = "org.apache.kafka.common.serialization.StringSerializer";
@@ -32,14 +32,14 @@ public class Client{
 
         KafkaProducer<String,String> sampleProducer= new KafkaProducer<String,String>(props);
 
-        sampleProducer.send(new ProducerRecord<String, String>("topic1", message));
+        sampleProducer.send(new ProducerRecord<String, String>("topic292", message));
         sampleProducer.close();
     }
 
     public void consumeMessage() throws FileNotFoundException, ScriptException {
         Properties props = new Properties();
         props.put("bootstrap.servers", this.kafkaServer);
-        props.put("group.id", "topic1");
+        props.put("group.id", "topic292");
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
         String deserializer = "org.apache.kafka.common.serialization.StringDeserializer";
@@ -53,15 +53,15 @@ public class Client{
         nashormEngine.eval(new FileReader("src/main/java/script.js"));
 //        Invocable invocableNashormEngine = (Invocable) nashormEngine;
 
-        consumer.subscribe(Arrays.asList("topic1"));
+        consumer.subscribe(Arrays.asList("topic292"));
 
         try {
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(100);
                 for (ConsumerRecord<String, String> record : records) {
-//                    System.out.println("key :" + record.key());
-                    System.out.println(nashormEngine.eval(record.value()));
-//                    System.out.println("topic :" + record.topic());
+                    System.out.println("key :" + record.offset());
+                    System.out.println((nashormEngine.eval(record.value())));
+                    System.out.println("topic :" + record.topic());
 //                    System.out.println("partition :" + record.partition());
 //                    System.out.println(invocableNashormEngine.invokeFunction("func1"));
                 }
@@ -71,8 +71,20 @@ public class Client{
             LOGGER.error("Exception occured while consuing messages",e);
         }finally {
             consumer.close();
+
         }
 
+
+    }
+
+    public void run() {
+        try {
+            this.consumeMessage();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -80,10 +92,13 @@ public class Client{
         Client sampleClient1 = new Client();
         Client sampleClient2 = new Client();
 
+        Thread t = new Thread(sampleClient1);
+        t.start();
+
         sampleClient1.ProduceMessages("var a = 1; var b = 0; a+b;");
         sampleClient2.ProduceMessages("var b = 3; a+b;");
-//        sampleClient2.consumeMessage();
-        sampleClient1.consumeMessage();
+//        sampleClient1.consumeMessage();
+
     }
 }
 
