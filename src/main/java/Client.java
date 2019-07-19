@@ -1,7 +1,4 @@
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.Scanner;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -11,93 +8,97 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
-public class Client implements Runnable{
+public class Client{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
     private String kafkaServer = "localhost:9092";
+    private static String topic = "topic_1";
+    private int clientId;
+    private KafkaConsumer kafkaConsumer;
+    private KafkaProducer kafkaProducer;
 
 
-    public void ProduceMessages(String message) {
-        Properties props=new Properties();
-        props.put("bootstrap.servers", this.kafkaServer);
-        String serializer = "org.apache.kafka.common.serialization.StringSerializer";
-        props.put("key.serializer", serializer);
-        props.put("value.serializer", serializer);
-
-        KafkaProducer<String,String> sampleProducer= new KafkaProducer<String,String>(props);
-
-        sampleProducer.send(new ProducerRecord<String, String>("topic292", message));
-        sampleProducer.close();
+    public Client(int clientId){
+        this.clientId = clientId;
+        this.kafkaConsumer = ConsumerGenerator.generateConsumer(kafkaServer, topic);
+        this.kafkaProducer = ProducerGenerator.generateProducer(kafkaServer);
     }
 
-    public void consumeMessage() throws FileNotFoundException, ScriptException {
-        Properties props = new Properties();
-        props.put("bootstrap.servers", this.kafkaServer);
-        props.put("group.id", "topic292");
-        props.put("enable.auto.commit", "true");
-        props.put("auto.commit.interval.ms", "1000");
-        String deserializer = "org.apache.kafka.common.serialization.StringDeserializer";
-        props.put("key.deserializer", deserializer);
-        props.put("value.deserializer", deserializer);
+    public void produceMessages(String message) { //message should be a js code
 
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
+        this.kafkaProducer.send(new ProducerRecord<String, String>(this.topic, message));
+    }
 
-        ScriptEngine nashormEngine;
-        nashormEngine = new ScriptEngineManager().getEngineByName("nashorn");
-        nashormEngine.eval(new FileReader("src/main/java/script.js"));
-//        Invocable invocableNashormEngine = (Invocable) nashormEngine;
+    public void consumeMessage() {
 
-        consumer.subscribe(Arrays.asList("topic292"));
+        ScriptEngine nashormEngine = new ScriptEngineManager().getEngineByName("nashorn");
 
         try {
             while (true) {
-                ConsumerRecords<String, String> records = consumer.poll(100);
+                ConsumerRecords<String, String> records = this.kafkaConsumer.poll(100);
                 for (ConsumerRecord<String, String> record : records) {
-                    System.out.println("key :" + record.offset());
-                    System.out.println((nashormEngine.eval(record.value())));
-                    System.out.println("topic :" + record.topic());
-//                    System.out.println("partition :" + record.partition());
-//                    System.out.println(invocableNashormEngine.invokeFunction("func1"));
+                    System.out.println(record.key()+ " "+ record.value());
                 }
             }
 
-        } catch(Exception e) {
-            LOGGER.error("Exception occured while consuing messages",e);
+        } catch(Exception exception) {
+            LOGGER.error("Exception occured while consuing messages",exception);
         }finally {
-            consumer.close();
+            kafkaConsumer.close();
 
         }
 
-
+        Runnable myRunnable =
+                new Runnable(){
+                    public void run(){
+                        System.out.println("Runnable running");
+                    }
+                };
     }
 
-    public void run() {
-        try {
-            this.consumeMessage();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (ScriptException e) {
-            e.printStackTrace();
-        }
-    }
+    public static void main(String[] args) {
+        final Client client = new Client(Integer.parseInt(args[0]));
+        System.out.println(client.clientId);
 
 
-    public static void main(String args[]) throws FileNotFoundException, ScriptException {
-        Client sampleClient1 = new Client();
-        Client sampleClient2 = new Client();
+//        client.consumeMessage();
 
-        Thread t = new Thread(sampleClient1);
-        t.start();
+//        assume the consensus scenario is a leader election
+//        assume the number of node is 3
+//        int clientsCount = 3;
+//        assume every nodes know that consensus variable is c
+//
 
-        sampleClient1.ProduceMessages("var a = 1; var b = 0; a+b;");
-        sampleClient2.ProduceMessages("var b = 3; a+b;");
-//        sampleClient1.consumeMessage();
+        // Lambda Runnable
+        Runnable consumming = new Runnable() {
+            @Override
+            public void run() {
+                client.consumeMessage();
+            }
+        };
+        new Thread(consumming).start();
+
+
+        Runnable producing = new Runnable() {
+            @Override
+            public void run() {
+                Scanner scanner = new Scanner(System.in);
+                while(true){
+                    String clientValue = scanner.next();
+                    System.out.println(clientValue);
+                    client.produceMessages(clientValue);
+
+                }
+            }
+        };
+        new Thread(producing).start();
+
+//        }
+
 
     }
 }
