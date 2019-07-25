@@ -14,7 +14,5 @@ public class ProducerGenerator {
 
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(props);
         return kafkaProducer;
-
     }
-
 }

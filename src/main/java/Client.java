@@ -1,36 +1,35 @@
 import java.util.Scanner;
 
+import com.itextpdf.kernel.counter.SystemOutEventCounter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 public class Client{
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
-
     private String kafkaServer = "localhost:9092";
-    private static String topic = "topic_1";
-    private int clientId;
+    private static String topic = "con";
+    private String code;
+    private String evaluation;
+    private String clientId;
     private KafkaConsumer kafkaConsumer;
     private KafkaProducer kafkaProducer;
 
 
-    public Client(int clientId){
+    public Client(String clientId){
         this.clientId = clientId;
-        this.kafkaConsumer = ConsumerGenerator.generateConsumer(kafkaServer, topic);
+        this.kafkaConsumer = ConsumerGenerator.generateConsumer(kafkaServer, topic, this.clientId);
         this.kafkaProducer = ProducerGenerator.generateProducer(kafkaServer);
     }
 
     public void produceMessages(String message) { //message should be a js code
 
-        this.kafkaProducer.send(new ProducerRecord<String, String>(this.topic, message));
+        this.kafkaProducer.send(new ProducerRecord<String, String>(topic, message));
     }
 
     public void consumeMessage() {
@@ -41,27 +40,25 @@ public class Client{
             while (true) {
                 ConsumerRecords<String, String> records = this.kafkaConsumer.poll(100);
                 for (ConsumerRecord<String, String> record : records) {
-                    System.out.println(record.key()+ " "+ record.value());
+                    this.code += record.value();
+//                    System.out.println(record.partition());
+                    System.out.println(nashormEngine.eval(this.code + this.evaluation));
+//                    System.out.println((this.code + this.evaluation));
+
                 }
             }
 
         } catch(Exception exception) {
-            LOGGER.error("Exception occured while consuing messages",exception);
+            System.out.println("Exception occurred while reading messages"+ exception);
         }finally {
             kafkaConsumer.close();
 
         }
 
-        Runnable myRunnable =
-                new Runnable(){
-                    public void run(){
-                        System.out.println("Runnable running");
-                    }
-                };
     }
 
     public static void main(String[] args) {
-        final Client client = new Client(Integer.parseInt(args[0]));
+        final Client client = new Client(args[0]);
         System.out.println(client.clientId);
 
 
@@ -69,8 +66,9 @@ public class Client{
 
 //        assume the consensus scenario is a leader election
 //        assume the number of node is 3
+        client.code = "var x=null;y=null;z=null;";
+        client.evaluation = "if(x===y && y===z){true;}else{false;}";
 //        int clientsCount = 3;
-//        assume every nodes know that consensus variable is c
 //
 
         // Lambda Runnable
@@ -89,7 +87,6 @@ public class Client{
                 Scanner scanner = new Scanner(System.in);
                 while(true){
                     String clientValue = scanner.next();
-                    System.out.println(clientValue);
                     client.produceMessages(clientValue);
 
                 }
@@ -97,8 +94,7 @@ public class Client{
         };
         new Thread(producing).start();
 
-//        }
-
+//
 
     }
 }
