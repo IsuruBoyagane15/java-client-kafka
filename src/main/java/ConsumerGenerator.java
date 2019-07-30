@@ -10,8 +10,8 @@ public class ConsumerGenerator {
         Properties props = new Properties();
 
         props.put("bootstrap.servers", kafkaServer);
-        props.put("group.id",clientId); //specifies consumer group - all the clients which want to come to concences should be part of same group
-        props.put("enable.auto.commit","true"); //let consumer to commit most lrecently read offset to kafka - default behaviour
+        props.put("group.id",clientId); //specifies consumer group - all the clients which want to come to consensus should be part of same group
+        props.put("enable.auto.commit","true"); //let consumer to commit most recently read offset to kafka - default behaviour
         props.put("auto.commit.interval.ms","1000");
         String deserializer = "org.apache.kafka.common.serialization.StringDeserializer";
         props.put("key.deserializer",deserializer);

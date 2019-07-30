@@ -13,18 +13,21 @@ public class Client{
     private String kafkaServer = "localhost:9092";
     private static String topic = "con";
     private Boolean consensusAchieved = false;
-    private String code;
-    private String evaluation;
+    private String code; // Js code that is updated in the runtime
+    private String evaluation; //Js code that evaluate the equality of variables that clients update
     private String clientId;
     private KafkaConsumer kafkaConsumer;
     private KafkaProducer kafkaProducer;
 
 
     public Client(String clientId){
+        //clientId is also the variable that a client instance update until each client comes to same value
+        // also clientId is user as the consumer group is of the client so that kafka broadcast each message to every client
         this.clientId = clientId;
         this.kafkaConsumer = ConsumerGenerator.generateConsumer(kafkaServer, topic, this.clientId);
         this.kafkaProducer = ProducerGenerator.generateProducer(kafkaServer);
     }
+
 
     public void produceMessages(String message) { //message should be a js code
 
@@ -33,7 +36,7 @@ public class Client{
 
     public void consumeMessage() {
 
-        ScriptEngine nashormEngine = new ScriptEngineManager().getEngineByName("nashorn");
+        ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
 
         try {
             while (this.consensusAchieved == false) {
@@ -41,7 +44,7 @@ public class Client{
                 for (ConsumerRecord<String, String> record : records) {
 
                     this.code += record.value();
-                    Object result = nashormEngine.eval(this.code + this.evaluation);
+                    Object result = nashorn.eval(this.code + this.evaluation);
 
                     int integerResult = (Integer)result;
                     if (integerResult == 1){
@@ -51,7 +54,6 @@ public class Client{
                     else{
                         System.out.println(false);
                     }
-
                 }
             }
 
@@ -59,9 +61,7 @@ public class Client{
             System.out.println("Exception occurred while reading messages"+ exception);
         }finally {
             kafkaConsumer.close();
-
         }
-
     }
 
     public static void main(String[] args) {
@@ -71,21 +71,21 @@ public class Client{
 
 
 //        assume the number of node is 3
+//        three client instances are trying to agree on a value
         client.code = "var x=null;y=null;z=null;";
         client.evaluation = "if(x===y && y===z && x!==null){1;}else{0;}";
-//        int clientsCount = 3;
-//
+
 
         // Lambda Runnable
-        Runnable consumming = new Runnable() {
+        Runnable consuming = new Runnable() {
             @Override
             public void run() {
                 client.consumeMessage();
             }
         };
-        new Thread(consumming).start();
+        new Thread(consuming).start();
 
-
+        // Lambda Runnable
         Runnable producing = new Runnable() {
             @Override
             public void run() {
@@ -93,21 +93,18 @@ public class Client{
                 while(client.consensusAchieved == false){
 
                     int clientRandom = (int)(1 + Math.random()*3);
-                    System.out.println(clientRandom);
-                    String clientValue = client.clientId + "=" + Integer.toString(clientRandom) + ";";
+                    System.out.println(client.clientId + "=" + clientRandom);
+                    String clientValue = client.clientId + "=" + clientRandom + ";"; //generate js line to write into kafka
                     client.produceMessages(clientValue);
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
-
                 }
             }
         };
         new Thread(producing).start();
-
     }
 }
 
