@@ -4,9 +4,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.graalvm.polyglot.*;
@@ -42,7 +39,6 @@ public class Client {
 
     public void consumeMessage() {
 
-//        ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
         org.graalvm.polyglot.Context jsContext = Context.create("js");
 
         try {
@@ -52,11 +48,6 @@ public class Client {
                 for (ConsumerRecord<String, String> record : records) {
                     this.code += record.value();
                     Value result = jsContext.eval("js",this.code + this.evaluation);
-
-//                    Value bindings = jsContext.getBindings("js").getMember();
-
-//                    Bindings object = (Bindings)result;
-//                    String agreedValue = result.get("value").toString();
 
 
                     Boolean consensusResult = result.getMember("consensus").asBoolean();
@@ -129,7 +120,7 @@ public class Client {
         new Thread(producing).start();
     }
 
-    public static void electLeader(String clientId, int instanceCount) throws ScriptException {
+    public static void electLeader(String clientId, int instanceCount) {
         final Client client = new Client(clientId);
         System.out.println(client.clientId);
 
