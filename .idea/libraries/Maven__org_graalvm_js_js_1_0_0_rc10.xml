@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.graalvm.js:js:1.0.0-rc10">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/graalvm/js/js/1.0.0-rc10/js-1.0.0-rc10.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/graalvm/js/js/1.0.0-rc10/js-1.0.0-rc10-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/graalvm/js/js/1.0.0-rc10/js-1.0.0-rc10-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -14,5 +14,16 @@
     <orderEntry type="library" name="Maven: org.lz4:lz4-java:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.7.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.26" level="project" />
+    <orderEntry type="library" name="Maven: org.graalvm.js:js:1.0.0-rc10" level="project" />
+    <orderEntry type="library" name="Maven: org.graalvm.regex:regex:1.0.0-rc10" level="project" />
+    <orderEntry type="library" name="Maven: org.graalvm.sdk:graal-sdk:1.0.0-rc10" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm:6.2" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-tree:6.2" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-analysis:6.2" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-commons:6.2" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-util:6.2" level="project" />
+    <orderEntry type="library" name="Maven: com.ibm.icu:icu4j:62.1" level="project" />
+    <orderEntry type="library" name="Maven: org.graalvm.js:js-scriptengine:1.0.0-rc10" level="project" />
+    <orderEntry type="library" name="Maven: org.graalvm.truffle:truffle-api:1.0.0-rc10" level="project" />
   </component>
 </module>

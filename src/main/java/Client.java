@@ -9,6 +9,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import org.graalvm.polyglot.*;
+
 public class Client {
 
     private static String topic = "consensus";
@@ -34,14 +36,14 @@ public class Client {
     }
 
     public void produceMessages(String message) { //message should be a js code
-
         this.kafkaProducer.send(new ProducerRecord<String, String>(topic, message));
     }
 
 
     public void consumeMessage() {
 
-        ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
+//        ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
+        org.graalvm.polyglot.Context jsContext = Context.create("js");
 
         try {
             while (!this.consensusAchieved) {
@@ -49,16 +51,23 @@ public class Client {
 
                 for (ConsumerRecord<String, String> record : records) {
                     this.code += record.value();
-                    Object result = nashorn.eval(this.code + this.evaluation);
+                    Value result = jsContext.eval("js",this.code + this.evaluation);
 
-                    Bindings object = (Bindings)result;
-                    Boolean consensusResult = (Boolean) object.get("consensus");
-                    String agreedValue = object.get("value").toString();
+//                    Value bindings = jsContext.getBindings("js").getMember();
+
+//                    Bindings object = (Bindings)result;
+//                    String agreedValue = result.get("value").toString();
+
+
+                    Boolean consensusResult = result.getMember("consensus").asBoolean();
+                    Value agreedValue = result.getMember("value");
+
 
                     if (consensusResult){
                         this.consensusAchieved = true;
                         System.out.println("Consensus.");
                         System.out.println(agreedValue);
+                        Thread.sleep(5000);
                     }
                     else{
                         System.out.println(false);
@@ -122,7 +131,7 @@ public class Client {
 
     public static void electLeader(String clientId, int instanceCount) throws ScriptException {
         final Client client = new Client(clientId);
-        System.out.println("client id is " + client.clientId);
+        System.out.println(client.clientId);
 
         client.code  = "var clientRanks = []; result = {consensus:false, value:\"null\"};";
         client.evaluation =
@@ -131,7 +140,6 @@ public class Client {
                     "var maxRank = 0;"+
                     "for (var i = 0; i < clientRanks.length; i++) {"+
                         "if(clientRanks[i].rank > maxRank){"+
-//                            "leader = clientRanks[i];"+
                             "result.consensus=true;" +
                             "result.value = clientRanks[i].client;" +
                             "maxRank = clientRanks[i].rank;" +
@@ -148,10 +156,9 @@ public class Client {
         };
         new Thread(consuming).start();
 
-        int clientRank = (int)(1 + Math.random()*10);
+        int clientRank = (int)(1 + Math.random()*100);
         client.produceMessages("clientRanks.push({client:\""+ client.clientId + "\",rank:" + clientRank +"});");
-        System.out.println("client rank is " + clientRank);
+        System.out.println(clientRank);
     }
-
 }
 
