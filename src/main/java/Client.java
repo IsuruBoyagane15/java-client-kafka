@@ -18,6 +18,13 @@ public class Client {
     private KafkaConsumer kafkaConsumer;
     private KafkaProducer kafkaProducer;
 
+    public String getCode() {
+        return code;
+    }
+
+    public String getEvaluation() {
+        return evaluation;
+    }
 
     public Client(String clientId){
         //clientId is also the variable that a client instance update until each client comes to same value
@@ -30,6 +37,10 @@ public class Client {
 
     public String getClientId() {
         return clientId;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public void produceMessages(String message) { //message should be a js code
@@ -72,6 +83,14 @@ public class Client {
         }finally {
             kafkaConsumer.close();
         }
+    }
+
+    public KafkaConsumer getKafkaConsumer() {
+        return kafkaConsumer;
+    }
+
+    public KafkaProducer getKafkaProducer() {
+        return kafkaProducer;
     }
 
     public static void agreeOnValue(String clientId){
@@ -118,6 +137,10 @@ public class Client {
             }
         };
         new Thread(producing).start();
+    }
+
+    public void setEvaluation(String evaluation) {
+        this.evaluation = evaluation;
     }
 
     public static void electLeader(String clientId, int instanceCount) {

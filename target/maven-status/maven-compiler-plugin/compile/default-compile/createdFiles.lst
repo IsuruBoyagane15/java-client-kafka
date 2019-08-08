@@ -1,7 +1,9 @@
 Main.class
 Client$2.class
 Client$3.class
+LockHandlerClient.class
 Client.class
 ConsumerGenerator.class
+LockHandlerClient$1.class
 ProducerGenerator.class
 Client$1.class
