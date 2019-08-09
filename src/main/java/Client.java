@@ -18,13 +18,7 @@ public class Client {
     private KafkaConsumer kafkaConsumer;
     private KafkaProducer kafkaProducer;
 
-    public String getCode() {
-        return code;
-    }
 
-    public String getEvaluation() {
-        return evaluation;
-    }
 
     public Client(String clientId){
         //clientId is also the variable that a client instance update until each client comes to same value
@@ -33,14 +27,6 @@ public class Client {
         String kafkaServer = "localhost:9092";
         this.kafkaConsumer = ConsumerGenerator.generateConsumer(kafkaServer, topic, this.clientId);
         this.kafkaProducer = ProducerGenerator.generateProducer(kafkaServer);
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public void produceMessages(String message) { //message should be a js code
@@ -85,12 +71,32 @@ public class Client {
         }
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getEvaluation() {
+        return evaluation;
+    }
+
     public KafkaConsumer getKafkaConsumer() {
         return kafkaConsumer;
     }
 
     public KafkaProducer getKafkaProducer() {
         return kafkaProducer;
+    }
+
+    public void setEvaluation(String evaluation) {
+        this.evaluation = evaluation;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public static void agreeOnValue(String clientId){
@@ -139,10 +145,6 @@ public class Client {
         new Thread(producing).start();
     }
 
-    public void setEvaluation(String evaluation) {
-        this.evaluation = evaluation;
-    }
-
     public static void electLeader(String clientId, int instanceCount) {
         final Client client = new Client(clientId);
         System.out.println(client.clientId);
@@ -174,5 +176,6 @@ public class Client {
         client.produceMessages("clientRanks.push({client:\""+ client.clientId + "\",rank:" + clientRank +"});");
         System.out.println(clientRank);
     }
+
 }
 
