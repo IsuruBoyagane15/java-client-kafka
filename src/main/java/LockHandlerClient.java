@@ -6,7 +6,7 @@ import org.graalvm.polyglot.Value;
 
 
 public class LockHandlerClient extends Client {
-    private static String topic = "consensus";
+    private static String topic = "takeLock";
     private Boolean consensusAchieved = false;
 
     public LockHandlerClient(String clientId){
@@ -16,11 +16,12 @@ public class LockHandlerClient extends Client {
     @Override
     public void consumeMessage() {
 
+        this.getKafkaConsumer().seekToBeginning(this.getKafkaConsumer().assignment());
         org.graalvm.polyglot.Context jsContext = Context.create("js");
 
         try {
             while (!this.consensusAchieved) {
-                ConsumerRecords<String, String> records = this.getKafkaConsumer().poll(5000);
+                ConsumerRecords<String, String> records = this.getKafkaConsumer().poll(5);
 
                 for (ConsumerRecord<String, String> record : records) {
                     this.setCode(this.getCode()+record.value());
@@ -29,8 +30,9 @@ public class LockHandlerClient extends Client {
                     Boolean consensusResult = result.asBoolean();
 
                     if (consensusResult){
+                        int iterations = (int)(3 + Math.random()*10);
                         this.consensusAchieved = true;
-                        for (int i = 0; i<15; i++){
+                        for (int i = 0; i<iterations; i++){
                             System.out.println(this.getClientId());
                             Thread.sleep(1000);
                         }
@@ -47,7 +49,7 @@ public class LockHandlerClient extends Client {
             System.out.println("Exception occurred while reading messages"+ exception);
             exception.printStackTrace(System.out);
         }finally {
-            this.getKafkaProducer().close();
+            this.getKafkaConsumer().close();
         }
     }
 
@@ -56,10 +58,11 @@ public class LockHandlerClient extends Client {
 
         client.setCode("var lockStatuses = []; result = false;");
         client.setEvaluation(
-                "if(lockStatuses[0] === \"" + client.getClientId() + "\"){\n" +
-                    "result = true;\n" +
-                "}\n" +
-                "result;\n");
+                "console.log(\"queue is :\" + lockStatuses);" +
+                "if(lockStatuses[0] === \"" + client.getClientId() + "\"){" +
+                    "result = true;" +
+                "}" +
+                "result;");
 
         client.produceMessages("lockStatuses.push(\""+ client.getClientId() + "\"" + ");");
 

@@ -67,7 +67,7 @@ public class Client {
             System.out.println("Exception occurred while reading messages"+ exception);
             exception.printStackTrace(System.out);
         }finally {
-            kafkaConsumer.close();
+            this.kafkaConsumer.close();
         }
     }
 
