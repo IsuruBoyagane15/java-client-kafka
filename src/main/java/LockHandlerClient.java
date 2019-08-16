@@ -6,7 +6,6 @@ import org.graalvm.polyglot.Value;
 
 
 public class LockHandlerClient extends Client {
-    private static String topic = "takeLock";
     private Boolean consensusAchieved = false;
 
     public LockHandlerClient(String clientId){
@@ -16,7 +15,8 @@ public class LockHandlerClient extends Client {
     @Override
     public void consumeMessage() {
 
-        this.getKafkaConsumer().seekToBeginning(this.getKafkaConsumer().assignment());
+//        this.getKafkaConsumer().seekToBeginning(this.getKafkaConsumer().assignment());
+//        --instead of seeking consumer configuration is set to "auto.offset.reset", "earliest"
         org.graalvm.polyglot.Context jsContext = Context.create("js");
 
         try {
@@ -36,7 +36,7 @@ public class LockHandlerClient extends Client {
                             System.out.println(this.getClientId());
                             Thread.sleep(1000);
                         }
-                        this.produceMessages("lockStatuses.shift();");
+                        this.produceMessages("lockStatuses.delete(\""+ this.getClientId() + "\"" + ");");
                         break;
                     }
                     else{
@@ -56,15 +56,15 @@ public class LockHandlerClient extends Client {
     public static void handleLock(String clientId){
         final LockHandlerClient client = new LockHandlerClient(clientId);
 
-        client.setCode("var lockStatuses = []; result = false;");
+        client.setCode("var lockStatuses = new Set([]); result = false;");
         client.setEvaluation(
-                "console.log(\"queue is :\" + lockStatuses);" +
-                "if(lockStatuses[0] === \"" + client.getClientId() + "\"){" +
+                "console.log(\"queue is :\" + Array.from(lockStatuses));" +
+                "if(Array.from(lockStatuses)[0] === \"" + client.getClientId() + "\"){" +
                     "result = true;" +
                 "}" +
                 "result;");
 
-        client.produceMessages("lockStatuses.push(\""+ client.getClientId() + "\"" + ");");
+        client.produceMessages("lockStatuses.add(\""+ client.getClientId() + "\"" + ");");
 
         Runnable consuming = new Runnable() {
             @Override
