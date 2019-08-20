@@ -1,7 +1,6 @@
 # java_client_kafka
-Java client application to communicate with Kafka server
+Java client application to communicate with Kafka server and achieve consensus amoung several indtances using Kafka messaging.
 
-Java client applications designed to achieve consensus amoung each other using Kafka messaging.
-
-Some of consenesus usecases like leader eleciton, distrinuted locking are implemented.
+Consenesus usecases like leader eleciton, distributed locking are implemented here
+.
 
