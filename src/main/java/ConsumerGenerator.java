@@ -16,13 +16,10 @@ public class ConsumerGenerator {
         String deserializer = "org.apache.kafka.common.serialization.StringDeserializer";
         props.put("key.deserializer",deserializer);
         props.put("value.deserializer",deserializer);
-        props.put("auto.offset.reset", "earliest");
+        props.put("auto.offset.reset", "earliest"); //set consumer to read the topic from the beginning
 
         KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
         consumer.subscribe(Arrays.asList(topic));
         return consumer;
     }
-
-
-
 }

@@ -16,7 +16,7 @@ public class LockHandlerClient extends Client {
     public void consumeMessage() {
 
 //        this.getKafkaConsumer().seekToBeginning(this.getKafkaConsumer().assignment());
-//        --instead of seeking consumer configuration is set to "auto.offset.reset", "earliest"
+//        instead of seeking to beginning consumer configuration is set to "auto.offset.reset", "earliest"
         org.graalvm.polyglot.Context jsContext = Context.create("js");
 
         try {
