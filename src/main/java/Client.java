@@ -11,8 +11,8 @@ public class Client {
 
     private static String topic = "consensus";
     private Boolean consensusAchieved = false;
-    private String code; // Js code that is updated in the runtime
-    private String evaluation; //Js code that evaluate the equality of variables that clients update
+    private String code;
+    private String evaluation;
     private String clientId;
     private KafkaConsumer kafkaConsumer;
     private KafkaProducer kafkaProducer;
