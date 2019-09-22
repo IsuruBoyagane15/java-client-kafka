@@ -27,7 +27,7 @@ public class LockHandlerClient extends Client {
                     this.setCode(this.getCode()+record.value());
                     Value result = jsContext.eval("js",this.getCode() + this.getEvaluation());
 
-                    Boolean consensusResult = result.asBoolean();
+                    boolean consensusResult = result.asBoolean();
 
                     if (consensusResult){
                         int iterations = (int)(3 + Math.random()*10);
